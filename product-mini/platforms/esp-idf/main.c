@@ -14,6 +14,7 @@
 
 #include "wasm_export.h"
 #include "bh_time.h"
+#include "bh_log.h"
 
 #include "test_wasm.h"
 
@@ -22,6 +23,9 @@
 #define CONFIG_APP_HEAP_SIZE 8192
 #define CONFIG_MAIN_THREAD_STACK_SIZE 4096
 
+static char global_heap_buf[CONFIG_GLOBAL_HEAP_BUF_SIZE] = { 0 };
+static char **argv = { "x" };
+
 void app_main()
 {
     wasm_module_t wasm_module = NULL;
@@ -29,7 +33,18 @@ void app_main()
     char error_buf[128];
     const char *exception;
 
+    if (bh_memory_init_with_pool(global_heap_buf, sizeof(global_heap_buf))
+        != 0) {
+        bh_printf("Init global heap failed.\n");
+        return;
+    }
+
+    //bh_memory_init_with_allocator(malloc, free);
+
     wasm_runtime_init();
+
+    bh_log_set_verbose_level(5);
+
     wasm_module = wasm_runtime_load(wasm_test_file, sizeof(wasm_test_file), error_buf, sizeof(error_buf));
     if (!wasm_module) { bh_printf("1 %s\n", error_buf); goto fail; }
     
@@ -37,7 +52,7 @@ void app_main()
 
     if (!wasm_module_inst) { bh_printf("2 %s\n", error_buf); goto fail; }
 
-    wasm_application_execute_main(wasm_module_inst, 0, NULL);
+    wasm_application_execute_main(wasm_module_inst, sizeof(argv), argv);
 
     exception = wasm_runtime_get_exception(wasm_module_inst);
 

@@ -44,11 +44,13 @@ uint32 bh_get_tick_sec()
  */
 uint64 _bh_time_get_millisecond_from_1970()
 {
-    return 0;
+    // XXX we don't have an RTC!
+    return esp_timer_get_time() / 1000;
 }
 
 size_t _bh_time_strftime(char *s, size_t max, const char *format, int64 time)
 {
-    return 0;
+    // XXX temporary: we don't actually have an RTC so we just fill in microseconds
+    return snprintf(s, max, "%lld", (uint64_t)esp_timer_get_time());
 }
 
