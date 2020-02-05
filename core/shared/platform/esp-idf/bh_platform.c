@@ -31,9 +31,6 @@ _stdout_hook_iwasm(int c)
 
 int bh_platform_init()
 {
-    extern void __stdout_hook_install(int (*hook)(int));
-    /* Enable printf() in Zephyr */
-    __stdout_hook_install(_stdout_hook_iwasm);
     return 0;
 }
 
