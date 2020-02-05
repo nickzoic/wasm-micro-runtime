@@ -16,6 +16,13 @@ idf_build_process(esp32
                 SDKCONFIG ${CMAKE_BINARY_DIR}/sdkconfig
                 BUILD_DIR ${CMAKE_BINARY_DIR})
 
+include_directories(
+    ../../../core/shared/platform/esp-idf/
+    ../../../core/shared/platform/include/
+    ../../../core/shared/include/
+    ../../../core/iwasm/include/
+)
+
 set(elf_file ${CMAKE_PROJECT_NAME}.elf)
 add_executable(${elf_file} main.c)
 
