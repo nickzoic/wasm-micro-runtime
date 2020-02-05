@@ -10,13 +10,18 @@
 #include <sys/timeb.h>
 #include <time.h>
 
+#include "freertos/FreeRTOS.h"
+//#include "freertos/task.h"
+
+#include "esp_timer.h"
+
 /*
  * This function returns milliseconds per tick.
  * @return milliseconds per tick.
  */
 uint64 _bh_time_get_tick_millisecond()
 {
-    return (uint64)sysconf(_SC_CLK_TCK);
+    return portTICK_PERIOD_MS;
 }
 
 /*
@@ -25,17 +30,12 @@ uint64 _bh_time_get_tick_millisecond()
  */
 uint64 _bh_time_get_boot_millisecond()
 {
-    struct timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
-        return 0;
-    }
-
-    return ((uint64) ts.tv_sec) * 1000 + ((uint64)ts.tv_nsec) / (1000 * 1000);
+    return esp_timer_get_time() / 1000;
 }
 
 uint32 bh_get_tick_sec()
 {
-    return (uint32)(_bh_time_get_boot_millisecond() / 1000);
+    return esp_timer_get_time() / 1000000L;
 }
 
 /*
@@ -44,27 +44,11 @@ uint32 bh_get_tick_sec()
  */
 uint64 _bh_time_get_millisecond_from_1970()
 {
-    struct timeb tp;
-    ftime(&tp);
-
-    return ((uint64) tp.time) * 1000 + tp.millitm
-            - (tp.dstflag == 0 ? 0 : 60 * 60 * 1000)
-            + ((uint64)tp.timezone) * 60 * 1000;
+    return 0;
 }
 
 size_t _bh_time_strftime(char *s, size_t max, const char *format, int64 time)
 {
-    time_t time_sec = (time_t)(time / 1000);
-    struct timeb tp;
-    struct tm *ltp;
-
-    ftime(&tp);
-    time_sec -= tp.timezone * 60;
-
-    ltp = localtime(&time_sec);
-    if (ltp == NULL) {
-        return 0;
-    }
-    return strftime(s, max, format, ltp);
+    return 0;
 }
 

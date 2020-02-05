@@ -23,11 +23,26 @@ include_directories(
     ../../../core/iwasm/include/
 )
 
+include_directories(
+    build/config/
+    xtensa/include/
+    $ENV{IDF_PATH}/components/esp32/include/
+    $ENV{IDF_PATH}/components/esp_common/include/
+    $ENV{IDF_PATH}/components/esp_rom/include/
+    $ENV{IDF_PATH}/components/freertos/include/
+    $ENV{IDF_PATH}/components/heap/include/
+    $ENV{IDF_PATH}/components/soc/esp32/include/
+    $ENV{IDF_PATH}/components/xtensa/include/
+    $ENV{IDF_PATH}/components/xtensa/esp32/include/
+)
+
 set(elf_file ${CMAKE_PROJECT_NAME}.elf)
 add_executable(${elf_file} main.c)
 
+add_library(wamr STATIC ../../../core/shared/platform/esp-idf/bh_time.c)
+
 # Link the static libraries to the executable
-target_link_libraries(${elf_file} idf::esp32 idf::freertos idf::spi_flash)
+target_link_libraries(${elf_file} idf::esp32 idf::freertos idf::spi_flash wamr)
 # Attach additional targets to the executable file for flashing,
 # linker script generation, partition_table generation, etc.
 idf_build_executable(${elf_file})
