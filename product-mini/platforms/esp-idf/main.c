@@ -64,7 +64,7 @@ void app_main()
 
     bh_printf("wasm_application_execute_main\n");
 
-    wasm_application_execute_main(wasm_module_inst, sizeof(argv), argv);
+    wasm_application_execute_main(wasm_module_inst, 1, argv);
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
