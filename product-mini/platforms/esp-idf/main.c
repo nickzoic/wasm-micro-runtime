@@ -24,7 +24,7 @@
 #define CONFIG_MAIN_THREAD_STACK_SIZE 4096
 
 static char global_heap_buf[CONFIG_GLOBAL_HEAP_BUF_SIZE] = { 0 };
-static char **argv = { "x" };
+static char *argv[1] = { "x" };
 
 void app_main()
 {
@@ -45,14 +45,30 @@ void app_main()
 
     bh_log_set_verbose_level(5);
 
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    bh_printf("wasm_runtime_load\n");
+
     wasm_module = wasm_runtime_load(wasm_test_file, sizeof(wasm_test_file), error_buf, sizeof(error_buf));
     if (!wasm_module) { bh_printf("1 %s\n", error_buf); goto fail; }
-    
+   
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    bh_printf("wasm_runtime_instantiate\n");
+
     wasm_module_inst = wasm_runtime_instantiate(wasm_module, CONFIG_APP_STACK_SIZE, CONFIG_APP_HEAP_SIZE, error_buf, sizeof(error_buf));
 
     if (!wasm_module_inst) { bh_printf("2 %s\n", error_buf); goto fail; }
 
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    bh_printf("wasm_application_execute_main\n");
+
     wasm_application_execute_main(wasm_module_inst, sizeof(argv), argv);
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    bh_printf("wasm_runtime_get_exception\n");
 
     exception = wasm_runtime_get_exception(wasm_module_inst);
 

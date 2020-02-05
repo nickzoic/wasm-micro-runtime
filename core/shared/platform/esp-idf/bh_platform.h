@@ -19,10 +19,16 @@
 #include <math.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <pthread.h>
 #include <limits.h>
 #include <fcntl.h>
 #include <errno.h>
+
+#include "esp_task.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,14 +59,15 @@ extern void DEBUGME(void);
 
 #define BHT_TIMEDOUT ETIMEDOUT
 
-#define INVALID_THREAD_ID 0xFFffFFff
 
-typedef pthread_t korp_tid;
-typedef void korp_sem;
-typedef pthread_mutex_t korp_mutex;
-typedef pthread_cond_t korp_cond;
-typedef pthread_t korp_thread;
-typedef void* (*thread_start_routine_t)(void*);
+typedef TaskHandle_t korp_tid;
+typedef SemaphoreHandle_t korp_sem;
+typedef SemaphoreHandle_t korp_mutex;
+typedef int korp_cond;
+typedef void korp_thread;
+typedef void (*thread_start_routine_t)(void*);
+
+#define INVALID_THREAD_ID ((korp_tid)0xFFffFFff)
 
 #define wa_malloc bh_malloc
 #define wa_free bh_free
@@ -106,7 +113,10 @@ char *bh_strdup(const char *s);
 
 int bh_platform_init();
 
-/* MMAP mode */
+void *bh_mmap(void *hint, unsigned int size, int prot, int flags);
+void bh_munmap(void *addr, uint32_t size);
+int bh_mprotect(void *addr, uint32_t size, int prot);
+
 enum {
     MMAP_PROT_NONE = 0,
     MMAP_PROT_READ = 1,
@@ -114,22 +124,8 @@ enum {
     MMAP_PROT_EXEC = 4
 };
 
-/* MMAP flags */
 enum {
     MMAP_MAP_NONE = 0,
-    /* Put the mapping into 0 to 2 G, supported only on x86_64 */
-    MMAP_MAP_32BIT = 1,
-    /* Don't interpret addr as a hint: place the mapping at exactly
-       that address. */
-    MMAP_MAP_FIXED = 2
 };
-
-void *bh_mmap(void *hint, unsigned int size, int prot, int flags);
-void bh_munmap(void *addr, uint32_t size);
-int bh_mprotect(void *addr, uint32_t size, int prot);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

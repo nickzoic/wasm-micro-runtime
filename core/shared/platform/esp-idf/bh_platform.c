@@ -22,32 +22,22 @@ char *bh_strdup(const char *s)
     return s1;
 }
 
-static int
-_stdout_hook_iwasm(int c)
-{
-//    printk("%c", (char)c);
-    return 1;
-}
-
 int bh_platform_init()
 {
     return 0;
 }
 
-void *
-bh_mmap(void *hint, unsigned int size, int prot, int flags)
+void *bh_mmap(void *hint, unsigned int size, int prot, int flags)
 {
     return bh_malloc(size);
 }
 
-void
-bh_munmap(void *addr, uint32 size)
+void bh_munmap(void *addr, uint32 size)
 {
     return bh_free(addr);
 }
 
-int
-bh_mprotect(void *addr, uint32 size, int prot)
+int bh_mprotect(void *addr, uint32 size, int prot)
 {
     return 0;
 }

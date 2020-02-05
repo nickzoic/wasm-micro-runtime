@@ -11,133 +11,140 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-//static bool is_thread_sys_inited = false;
+#include <esp_task.h>
 
 int _vm_thread_sys_init()
 {
-	return 0;
+    return BHT_OK;
 }
 
 void vm_thread_sys_destroy(void)
 {
 }
 
-/*static void *vm_thread_wrapper(void *arg)
-{
-}*/
-
 int _vm_thread_create_with_prio(korp_tid *tid, thread_start_routine_t start,
                                 void *arg, unsigned int stack_size, int prio)
 {
-	return 0;
+    TaskHandle_t task_handle;
+    if (xTaskCreate(start, "", 600, arg, 2, &task_handle) == pdPASS) {
+        *tid = task_handle;
+	bh_printf("CREATED THREAD %p", task_handle);
+        return BHT_OK;
+    } else {
+        return BHT_ERROR;
+    }
 }
 
 int _vm_thread_create(korp_tid *tid, thread_start_routine_t start, void *arg,
                       unsigned int stack_size)
 {
-	return 0;
+    return _vm_thread_create_with_prio(tid, start, arg, stack_size, 2);
 }
 
 korp_tid _vm_self_thread()
 {
-	return 0;
+    return xTaskGetCurrentTaskHandle();
 }
 
-void vm_thread_exit(void * code)
+void vm_thread_exit(void *code)
 {
+    (void)code;
+    vTaskDelete(xTaskGetCurrentTaskHandle());
 }
 
 void *_vm_tls_get(unsigned idx)
 {
-	return 0;
+    return 0;
 }
 
 int _vm_tls_put(unsigned idx, void * tls)
 {
-	return 0;
+    return 0;
 }
 
 int _vm_mutex_init(korp_mutex *mutex)
 {
-	return 0;
+    *mutex = xSemaphoreCreateMutex();
+    return BHT_OK;
 }
 
 int _vm_recursive_mutex_init(korp_mutex *mutex)
 {
-	return 0;
+    // XXX there's separate TakeRecursive and GiveRecursive functions which should be called below
+    // instead of just Take and Give ... 
+    *mutex = xSemaphoreCreateRecursiveMutex();
+    return BHT_OK;
 }
-
 
 int _vm_mutex_destroy(korp_mutex *mutex)
 {
-	return 0;
+    vSemaphoreDelete(*mutex);
+    return BHT_OK;
 }
 
-/* Returned error (EINVAL, EAGAIN and EDEADLK) from
- locking the mutex indicates some logic error present in
- the program somewhere.
- Don't try to recover error for an existing unknown error.*/
 void vm_mutex_lock(korp_mutex *mutex)
 {
+    // XXX should chuck an exception if this fails
+    xSemaphoreTake(*mutex, portMAX_DELAY);
 }
 
 int vm_mutex_trylock(korp_mutex *mutex)
 {
-    return 0;
+    return (xSemaphoreTake(*mutex, 0) == pdTRUE) ? BHT_OK : BHT_ERROR;
 }
 
-/* Returned error (EINVAL, EAGAIN and EPERM) from
- unlocking the mutex indicates some logic error present
- in the program somewhere.
- Don't try to recover error for an existing unknown error.*/
 void vm_mutex_unlock(korp_mutex *mutex)
 {
+    // XXX should chuck an exception if this fails
+    xSemaphoreGive(*mutex);
 }
 
 int _vm_sem_init(korp_sem* sem, unsigned int c)
 {
-    return 0;
+    // XXX what is c anyway?
+    *sem = xSemaphoreCreateCounting(0, c);
+    return *sem ? BHT_OK : BHT_ERROR;
 }
 
 int _vm_sem_destroy(korp_sem *sem)
 {
-    return 0;
+    vSemaphoreDelete(*sem);
+    return BHT_OK;
 }
 
 int _vm_sem_wait(korp_sem *sem)
 {
-    return 0;
+    return (xSemaphoreTake(*sem, portMAX_DELAY) == pdTRUE) ? BHT_OK : BHT_ERROR;
 }
 
 int _vm_sem_reltimedwait(korp_sem *sem, int mills)
 {
-    return 0;
+    return (xSemaphoreTake(*sem, mills / portTICK_PERIOD_MS) == pdTRUE) ? BHT_OK : BHT_ERROR;
 }
 
 int _vm_sem_post(korp_sem *sem)
 {
-    return 0;
+    xSemaphoreGive(*sem);
+    return BHT_OK;
 }
 
 int _vm_cond_init(korp_cond *cond)
 {
+	bh_printf("cond init\n");
 	return 0;
 }
 
 int _vm_cond_destroy(korp_cond *cond)
 {
+	bh_printf("cond destroy\n");
 	return 0;
 }
 
 int _vm_cond_wait(korp_cond *cond, korp_mutex *mutex)
 {
+	bh_printf("cond wait\n");
 	return 0;
 }
-
-/*static void msec_nsec_to_abstime(struct timespec *ts, int64 msec, int32 nsec)
-{
-	return 0;
-}*/
 
 int _vm_cond_reltimedwait(korp_cond *cond, korp_mutex *mutex, int mills)
 {
@@ -146,26 +153,33 @@ int _vm_cond_reltimedwait(korp_cond *cond, korp_mutex *mutex, int mills)
 
 int _vm_cond_signal(korp_cond *cond)
 {
+	bh_printf("cond sig\n");
 	return 0;
 }
 
 int _vm_cond_broadcast(korp_cond *cond)
 {
+	bh_printf("cond bcast\n");
 	return 0;
 }
 
 int _vm_thread_cancel(korp_tid thread)
 {
+	bh_printf("thread cancel\n");
 	return 0;
 }
 
 int _vm_thread_join(korp_tid thread, void **value_ptr, int mills)
 {
+	// XXX no idea
+	bh_printf("thread join\n");
 	return 0;
 }
 
 int _vm_thread_detach(korp_tid thread)
 {
-	return 0;
+	// XXX this isn't defined in some other platforms either
+	(void) thread;
+	return BHT_OK;
 }
 
